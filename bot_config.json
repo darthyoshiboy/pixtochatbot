@@ -1,0 +1,8 @@
+{
+	"channel": "",
+	"username": "",
+	"oauth_key": "",
+	"ignore_list": ["nightbot", "moobot", "revlobot"],
+    "revlo_key": "",
+	"owner_list": [""]
+}

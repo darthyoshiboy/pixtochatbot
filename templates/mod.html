@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Image Moderator</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<style>
+  img {
+  image-rendering: pixelated;
+  filter: blur(30px);
+  }
+  img:hover {
+  image-rendering: pixelated;
+  filter: grayscale(100%) contrast(20) brightness(1.5);
+  }
+  button.yes{
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+  button.no{
+    background-color: #f44336; /* Red */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+</style>
+</head>
+
+<body>
+
+
+<div style="width: 640px; height: 360px;" id ="modQueue">
+    Images to Moderate will appear here:<br>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.2/socket.io.js"></script>
+<script>
+  var lookAtMeIAmACounter = 0;
+  var socket = io.connect('ws://localhost:3000');
+  socket.on('image', function(info) {
+      if(!info.modded)
+      {
+        document.getElementById("modQueue").innerHTML+=makeMeDiv(info);
+      }
+  });
+
+  function makeMeDiv(info)
+  {
+    lookAtMeIAmACounter++;
+    var newDiv = "<div class='edit' id='queueItem" + lookAtMeIAmACounter + "' >" ;
+    newDiv += "Image from: "
+    newDiv += info.user;
+    newDiv += "<br><button class='yes' onClick='ahoyItsAnImg(\"" + info.url +"\", \""+ info.user +"\", "+lookAtMeIAmACounter+")'>Approve</button> <button class='no' onClick='heckNo(" + lookAtMeIAmACounter + ")'>Disapprove</button>";
+    newDiv += "<br><br><img src='";
+    newDiv += info.url;
+    newDiv += "' /><br/>";
+
+
+    newDiv += "</div>";
+    return newDiv;
+  }
+
+  function heckNo(divId)
+  {
+    document.getElementById("queueItem" + divId).innerHTML = "";
+  }
+
+  function ahoyItsAnImg(url, user, divId)
+  {
+    //emits stuff
+    socket.emit('image', { "image": true,"url":url,"user":user,"modded": true});
+    heckNo(divId);
+  }
+</script>
+</body>
+</html>

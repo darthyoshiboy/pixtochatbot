@@ -72,7 +72,7 @@ class PixToChat(Command):
 
     def run(self, bot, user, msg):
         regexcheck = re.compile(r'^\!pix2chat\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
-        url = regexcheck.match(msg).group(0)
+        url = regexcheck.match(msg).group(1)
         picUser = user.lower().strip()
         pointsRedeem = 120
         redeem = False

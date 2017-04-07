@@ -62,12 +62,12 @@ class PixToChat(Command):
     perm = Permission.User
 
     def match(self, bot, user, msg):
-        regexcheck = re.compile(r'^\!pix2chat\ (http[|s]://i.imgur.com.*[.png|.jpg|.gif])$')
+        regexcheck = re.compile(r'^\!pix2chat\ (http(|s)://i.imgur.com.*(.png|.jpg|.gif))$')
         if regexcheck.search(msg):
             return True
         else:
             if msg.lower().startswith("!pix2chat"):
-                bot.write("Hey {} ")
+                bot.write("Hey {}, you have to submit an Imgur link with that command".format(picUser))
             return False
 
     def run(self, bot, user, msg):
@@ -83,7 +83,7 @@ class PixToChat(Command):
             try:
                 redeem = client.bonus(picUser, -pointsRedeem)
             except:
-                bot.write("I'm sorry {}. I was unable to redeem your points. Please try again.").format(picUser)
+                bot.write("I'm sorry {}. I was unable to redeem your points. Please try again.".format(picUser))
         else:
             bot.write("Sorry {}, you haven't got the {} points needed to PixtoChat".format(picUser,pointsRedeem))
             redeem = False

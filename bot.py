@@ -58,13 +58,13 @@ class TwitchBot(irc.IRCClient, object):
     def joined(self, channel):
         logging.warning("Joined %s" % channel)
 
-    def revlostart():
+    def revlostart(self):
         headerdata = {'content-type':'application/json','x-api-key':CONFIG['revlo_key']}
         jsondata = {'name':CONFIG['channel']}
         url = 'https://www.revlo.co/api/streamers_settings/startStreaming'
         requests.post(url, json=jsondata, headers=headerdata)
 
-    def revlostop():
+    def revlostop(self):
         headerdata = {'content-type':'application/json','x-api-key':CONFIG['revlo_key']}
         jsondata = {'name':CONFIG['channel']}
         url = 'https://www.revlo.co/api/streamers_settings/stopStreaming'

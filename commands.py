@@ -62,7 +62,7 @@ class PixToChat(Command):
     perm = Permission.User
 
     def match(self, bot, user, msg):
-        regexcheck = re.compile(r'^\!pix2chat\ (http(|s)://i.imgur.com.*(.png|.jpg|.gif))$')
+        regexcheck = re.compile(r'^\!pix2chat\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
         if regexcheck.search(msg):
             return True
         else:
@@ -71,7 +71,7 @@ class PixToChat(Command):
             return False
 
     def run(self, bot, user, msg):
-        regexcheck = re.compile(r'^\!pix2chat\ (http[|s]://i.imgur.com.*[.png|.jpg|.gif])$')
+        regexcheck = re.compile(r'^\!pix2chat\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
         url = regexcheck.match(msg).group(0)
         picUser = user.lower().strip()
         pointsRedeem = 120

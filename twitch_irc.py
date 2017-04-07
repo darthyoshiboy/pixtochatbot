@@ -58,6 +58,7 @@ class chatSocket(Thread):
 class BotFactory(protocol.ClientFactory):
     protocol = bot.TwitchBot
 
+    protocol.revlostart()
     tags = defaultdict(dict)
     activity = dict()
     wait_time = 1
@@ -79,6 +80,5 @@ if __name__ == "__main__":
     thread = chatSocket()
     thread.daemon = True
     thread.start()
-    bot.TwitchBot.revlostart()
     reactor.connectTCP('irc.twitch.tv', 6667, BotFactory())
     reactor.run()

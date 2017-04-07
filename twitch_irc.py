@@ -22,20 +22,6 @@ class chatSocket(Thread):
         Thread.__init__(self)
 
     def run(self):
-#        sio = socketio.Server()
-#        app = Flask(__name__, static_url_path='/webjs')
-#        @app.route('/')
-#        def index():
-#            """Serve the client-side application."""
-#            return render_template('index.html')
-#
-#        @sio.on('new message')
-#        def message(sid, data):
-#            print('message ', data)
-#            sio.emit("new message", data)
-#
-#        app = socketio.Middleware(sio, app)
-#        eventlet.wsgi.server(eventlet.listen(('', 3000)), app)
         from flask import Flask, render_template
         from flask_socketio import SocketIO, emit
 
@@ -58,7 +44,6 @@ class chatSocket(Thread):
 class BotFactory(protocol.ClientFactory):
     protocol = bot.TwitchBot
 
-    protocol.revlostart()
     tags = defaultdict(dict)
     activity = dict()
     wait_time = 1

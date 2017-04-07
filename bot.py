@@ -55,23 +55,8 @@ class TwitchBot(irc.IRCClient, object):
         self.sendLine("CAP REQ :twitch.tv/tags")
         self.join(self.channel)
 
-        # Bring Revlo Up
-        self.revlostart()
-
     def joined(self, channel):
         logging.warning("Joined %s" % channel)
-
-    def revlostart(self):
-        headerdata = {'content-type':'application/json','x-api-key':CONFIG['revlo_key']}
-        jsondata = {'name':CONFIG['channel']}
-        url = 'https://www.revlo.co/api/streamers_settings/startStreaming'
-        requests.post(url, json=jsondata, headers=headerdata)
-
-    def revlostop(self):
-        headerdata = {'content-type':'application/json','x-api-key':CONFIG['revlo_key']}
-        jsondata = {'name':CONFIG['channel']}
-        url = 'https://www.revlo.co/api/streamers_settings/stopStreaming'
-        requests.post(url, json=jsondata, headers=headerdata)
 
     def sendsockmsg(self, user, message):
         with SocketIO('localhost', 3000) as socketIO:
@@ -340,7 +325,6 @@ class TwitchBot(irc.IRCClient, object):
         self.quit()
 
     def terminate(self):
-        self.revlostop()
         self.close_commands()
         reactor.stop()
 

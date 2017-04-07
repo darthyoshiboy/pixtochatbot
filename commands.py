@@ -63,6 +63,7 @@ class PixToChat(Command):
 
     def match(self, bot, user, msg):
         regexcheck = re.compile(r'^\!pix2chat\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
+        picUser = user.lower().strip()
         if regexcheck.search(msg):
             return True
         else:

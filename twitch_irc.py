@@ -79,5 +79,6 @@ if __name__ == "__main__":
     thread = chatSocket()
     thread.daemon = True
     thread.start()
+    bot.revlostart()
     reactor.connectTCP('irc.twitch.tv', 6667, BotFactory())
     reactor.run()

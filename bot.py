@@ -55,6 +55,9 @@ class TwitchBot(irc.IRCClient, object):
         self.sendLine("CAP REQ :twitch.tv/tags")
         self.join(self.channel)
 
+        # Bring Revlo Up
+        self.revlostart()
+
     def joined(self, channel):
         logging.warning("Joined %s" % channel)
 

@@ -12,6 +12,8 @@ import signal
 import json
 import time
 import re
+import sqlite3 as lite
+import sys
 
 USERLIST_API = "http://tmi.twitch.tv/group/user/{}/chatters"
 with open('bot_config.json') as fp:
@@ -287,11 +289,27 @@ class TwitchBot(irc.IRCClient, object):
         ''' Returns list of users active in chat in
         the past t seconds (default: 10m)'''
 
+#        conDB = lite.connect('users.db')
+#        with conDB:
+#            cur = conDB.cursor()
+#            cur.execute("UPDATE UserPoints SET active = 0")
+#            conDB.commit()
         now = time.time()
         active_users = []
         for user, last in self.activity.items():
             if now - last < t:
                 active_users.append(user)
+#        with conDB:
+#            cur = conDB.cursor()
+#            for user in active_users:
+#                cur.execute("INSERT OR IGNORE INTO UserPoints(username,active,points) VALUES(?,?,?);",(str(user),1,0))
+#            conDB.commit()
+#        with conDB:
+#            cur = conDB.cursor()
+#            for user in active_users:
+#                logging.warning(user)
+#                cur.execute("UPDATE UserPoints SET active = 1 WHERE username=:username;",{"username": str(user)})
+#            conDB.commit()
 
         return active_users
 

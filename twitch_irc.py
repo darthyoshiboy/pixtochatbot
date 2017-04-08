@@ -3,13 +3,14 @@ from collections import defaultdict
 
 import sys, json
 import socketio
-import eventlet
+#import eventlet
 from flask import Flask, render_template
 from threading import Thread
 import bot
 import time
 import logging
 import logging.config
+import requests
 logging.config.fileConfig('logging.conf')
 
 global sio
@@ -22,20 +23,6 @@ class chatSocket(Thread):
         Thread.__init__(self)
 
     def run(self):
-#        sio = socketio.Server()
-#        app = Flask(__name__, static_url_path='/webjs')
-#        @app.route('/')
-#        def index():
-#            """Serve the client-side application."""
-#            return render_template('index.html')
-#
-#        @sio.on('new message')
-#        def message(sid, data):
-#            print('message ', data)
-#            sio.emit("new message", data)
-#
-#        app = socketio.Middleware(sio, app)
-#        eventlet.wsgi.server(eventlet.listen(('', 3000)), app)
         from flask import Flask, render_template
         from flask_socketio import SocketIO, emit
 
@@ -54,6 +41,43 @@ class chatSocket(Thread):
             emit('image', message, broadcast=True)
 
         socketio.run(app, port=3000)
+
+class trackUserPoints(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+
+    def run(self):
+        import sqlite3 as lite
+        import sys
+        with open('bot_config.json') as fp:
+            CONFIG = json.load(fp)
+
+        USERLIST_API = "http://tmi.twitch.tv/group/user/{}/chatters".format(CONFIG['channel'])
+
+        conDB = lite.connect('users.db')
+
+        while True:
+            current_users = []
+            with conDB:
+                cur = conDB.cursor()
+                cur.execute("UPDATE UserPoints SET active = 0")
+                conDB.commit()
+            usrapi = requests.get(url=USERLIST_API)
+            usrjson = usrapi.json()['chatters']
+            for cat in usrjson:
+                for usr in usrjson[cat]:
+                    with conDB:
+                        cur = conDB.cursor()
+                        cur.execute("INSERT OR IGNORE INTO UserPoints(username,active,points) VALUES(?,?,?);",(str(usr), 1, 0))
+                        cur.execute("UPDATE UserPoints SET active = 1 WHERE username=:username;",{"username": str(usr)})
+                        conDB.commit()
+
+            with conDB:
+                cur = conDB.cursor()
+                cur.execute("UPDATE UserPoints SET points = points + 1 WHERE active = 1")
+                conDB.commit()
+            logging.warning("All active users increased One (1) loyalty point.")
+            time.sleep(60)
 
 class BotFactory(protocol.ClientFactory):
     protocol = bot.TwitchBot
@@ -79,5 +103,8 @@ if __name__ == "__main__":
     thread = chatSocket()
     thread.daemon = True
     thread.start()
+    pthread = trackUserPoints()
+    pthread.daemon = True
+    pthread.start()
     reactor.connectTCP('irc.twitch.tv', 6667, BotFactory())
     reactor.run()

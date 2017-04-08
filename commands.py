@@ -4,6 +4,8 @@ import json
 import time
 import random
 import re
+import sqlite3 as lite
+import sys
 
 global raffleEntrants
 global runningRaffle

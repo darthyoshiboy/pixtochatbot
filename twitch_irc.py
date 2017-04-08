@@ -98,7 +98,6 @@ class BotFactory(protocol.ClientFactory):
         self.wait_time = min(512, self.wait_time * 2)
         connector.connect()
 
-
 if __name__ == "__main__":
     thread = chatSocket()
     thread.daemon = True

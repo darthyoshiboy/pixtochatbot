@@ -1,8 +1,8 @@
 {
-	"channel": "",
-	"username": "",
-	"oauth_key": "",
+	"channel": "darthyoshiboy",
+	"username": "darthyoshibot",
+	"oauth_key": "oauth:ltp46xmi8m9q1qzfmq1w4107p333n9",
 	"ignore_list": ["nightbot", "moobot", "revlobot"],
-    "revlo_key": "",
-	"owner_list": [""]
+    "revlo_key": "OcezBfpQvbhylNOcGy0LtkDF3GycpgWUNc-y_HIGxM0",
+	"owner_list": ["darthyoshiboy"]
 }

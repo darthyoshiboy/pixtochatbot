@@ -54,7 +54,7 @@ class trackUserPoints(Thread):
 
         USERLIST_API = "http://tmi.twitch.tv/group/user/{}/chatters".format(CONFIG['channel'])
 
-        conDB = lite.connect('users.db')
+        conDB = lite.connect('bot.db')
 
         while True:
             current_users = []

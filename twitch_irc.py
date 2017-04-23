@@ -68,8 +68,10 @@ class trackUserPoints(Thread):
                 for usr in usrjson[cat]:
                     with conDB:
                         cur = conDB.cursor()
-                        cur.execute("INSERT OR IGNORE INTO UserPoints(username,active,points) VALUES(?,?,?);",(str(usr), 1, 0))
-                        cur.execute("UPDATE UserPoints SET active = 1 WHERE username=:username;",{"username": str(usr)})
+                        cur.execute("INSERT OR IGNORE INTO UserPoints(username,active,points,redemption) VALUES(?,?,?,?);",\
+                                    (str(usr).lower().strip(), 1, 0, 0))
+                        cur.execute("UPDATE UserPoints SET active = 1 WHERE username=:username;",\
+                                    {"username": str(usr).lower().strip()})
                         conDB.commit()
 
             with conDB:

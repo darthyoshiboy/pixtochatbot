@@ -1,5 +1,6 @@
 from threading import Thread
 from revlo.client import RevloClient
+import sqlite3 as lite
 import json
 import time
 import random
@@ -58,38 +59,169 @@ class EnterRaffle(Command):
         else:
             bot.write("{} has already entered.".format(rafUser))
 
+
+class Bonus(Command):
+    '''Bonus user points'''
+
+    perm = Permission.Moderator
+
+    def match(self, bot, user, msg):
+        args = msg.split()
+        if msg.lower().startswith("!pmod") and len(args) == 3:
+            bonusUser = args[1].lower().strip()
+            bonusAmount = args[2]
+            try:
+                conDB = lite.connect('bot.db')
+                cur = conDB.cursor()
+                cur.execute("SELECT rowid FROM UserPoints WHERE username=:user;", {"user": bonusUser})
+                usrCheck = cur.fetchone()
+                conDB.close()
+                if usrCheck is None:
+                    bot.write("{} could not be found in the point tracker.".format(bonusUser))
+                    return False
+            except:
+                bot.write("Something has gone wrong and I don't know what it was.")
+                return False
+        elif msg.lower().startswith("!pmod"):
+            bot.write("!pmod Usage: !pmod username [Points +/- anywhere from -9999 to 9999 without square brackets]")
+            return False
+        regexcheck = re.compile(r'^-?\d?\d?\d?\d?$')
+        if msg.lower().startswith("!pmod") and regexcheck.search(bonusAmount) and usrCheck is not None:
+            return True
+        else:
+            return False
+
+    def run(self, bot, user, msg):
+        args = msg.split()
+        bonusUser = args[1].lower().strip()
+        bonusAmount = int(args[2])
+        try:
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("UPDATE UserPoints SET points = points+:inc WHERE username=:user;", \
+                        {"inc": bonusAmount, "user": bonusUser})
+            conDB.commit()
+            conDB.close()
+            if bonusAmount > 0:
+                bot.write("{} was gifted {} Psy Points".format(bonusUser, bonusAmount))
+            else:
+                bot.write("{} was docked {} Psy Points".format(bonusUser, bonusAmount))
+        except:
+            bot.write("Despite my best efforts that didn't work.")
+
+
+class Points(Command):
+    '''Check user points'''
+
+    perm = Permission.User
+
+    def match(self, bot, user, msg):
+        return msg.lower().startswith("!pp")
+
+    def run(self, bot, user, msg):
+        pointUser = user.lower().strip()
+        userPoints = None
+        try:
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("SELECT points FROM UserPoints WHERE username=:user;", {"user": pointUser})
+            userPoints = cur.fetchone()[0]
+            conDB.close()
+        except:
+            bot.write("Sorry {} I don't seem to have any points for you or an error has occured.".format(pointUser))
+        if userPoints:
+            if userPoints > 1:
+                bot.write("User {} has {} Psy Points".format(pointUser, userPoints))
+            else:
+                bot.write("User {} has {} Psy Point".format(pointUser, userPoints))
+
+
+class PointsMe(Command):
+    '''One time user points bonus'''
+
+    perm = Permission.User
+
+    def match(self, bot, user, msg):
+        return msg.lower().startswith("!pointsme")
+
+    def run(self, bot, user, msg):
+        pointUser = user.lower().strip()
+        error = None
+        bonusPoints = 1200
+        conDB = lite.connect('bot.db')
+        cur = conDB.cursor()
+        cur.execute("SELECT redemption FROM UserPoints WHERE username=:user;", {"user": pointUser})
+        try:
+            userRedeem = cur.fetchone()[0]
+        except:
+            userRedeem = None
+        if userRedeem == 0:
+            try:
+                cur.execute("UPDATE UserPoints SET points = points+:inc WHERE username=:user;",\
+                            {"inc":bonusPoints,"user":pointUser})
+                cur.execute("UPDATE UserPoints SET redemption = 1 WHERE username=:user;", {"user":pointUser})
+                conDB.commit()
+                bot.write("{} has redeemed a one time Points bonus of {}".format(pointUser, bonusPoints))
+            except:
+                bot.write("Sorry {} I screwed up somewhere and I don't know where.".format(pointUser))
+        elif userRedeem is not None:
+            try:
+                cur.execute("UPDATE UserPoints SET redemption = redemption + 1 WHERE username=:user;",\
+                            {"user": pointUser})
+                conDB.commit()
+            except:
+                bot.write("Sorry {} it seems like you've already redeemed".format(pointUser) +\
+                          " bonus points. What's more, I still screwed something up and I don't know where.")
+                error = True
+            if not error:
+                bot.write("Sorry {} it seems like you've already redeemed bonus points".format(pointUser))
+        else:
+            bot.write("Twitch hasn't registered your presence here yet, try again in a few minutes.")
+
+        conDB.close()
+
+
 class PixToChat(Command):
     '''Send an image to chat'''
 
     perm = Permission.User
 
     def match(self, bot, user, msg):
-        regexcheck = re.compile(r'^\!pix2chat\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
+        regexcheck = re.compile(r'^\!pix\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
         picUser = user.lower().strip()
         if regexcheck.search(msg):
             return True
         else:
-            if msg.lower().startswith("!pix2chat"):
-                bot.write("Hey {}, you have to submit an Imgur link with that command".format(picUser))
+            if msg.lower().startswith("!pix"):
+                bot.write("Hey {}, you have to submit an Imgur link to a .png, .jpg, or .gif image.".format(picUser))
             return False
 
     def run(self, bot, user, msg):
-        regexcheck = re.compile(r'^\!pix2chat\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
+        regexcheck = re.compile(r'^\!pix\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
         url = regexcheck.match(msg).group(1)
+        conDB = lite.connect('bot.db')
         picUser = user.lower().strip()
         pointsRedeem = 120
         redeem = False
-        revkey = CONFIG['revlo_key']
-        client = RevloClient(api_key=revkey)
-        userPoints = client.get_loyalty(picUser)['loyalty']['current_points']
+        cur = conDB.cursor()
+        cur.execute("SELECT points FROM UserPoints WHERE username=:user;", {"user": picUser} )
+        userPoints = cur.fetchone()[0]
+        #revkey = CONFIG['revlo_key']
+        #client = RevloClient(api_key=revkey)
+        #userPoints = client.get_loyalty(picUser)['loyalty']['current_points']
         if userPoints >= pointsRedeem:
             try:
-                redeem = client.bonus(picUser, -pointsRedeem)
+                redeem = cur.execute("UPDATE UserPoints SET points = points-:cost WHERE username=:user;",\
+                                     {"cost": pointsRedeem, "user": picUser })
+                conDB.commit()
+                #redeem = True
+                #redeem = client.bonus(picUser, -pointsRedeem)
             except:
                 bot.write("I'm sorry {}. I was unable to redeem your points. Please try again.".format(picUser))
         else:
             bot.write("Sorry {}, you haven't got the {} points needed to PixtoChat".format(picUser,pointsRedeem))
             redeem = False
+        conDB.close()
         if redeem:
             bot.sendimgurmsg(user, url)
             bot.write("{} has redeemed a PixtoChat image!".format(picUser))

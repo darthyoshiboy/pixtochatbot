@@ -319,7 +319,10 @@ class TwitchBot(irc.IRCClient, object):
             cmds.Timer(self),
             cmds.EnterRaffle(self),
             cmds.Raffle(self),
-            cmds.PixToChat(self)
+            cmds.PixToChat(self),
+            cmds.Points(self),
+            cmds.PointsMe(self),
+            cmds.Bonus(self)
         ]
 
     def reload(self):

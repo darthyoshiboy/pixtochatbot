@@ -103,9 +103,9 @@ class Bonus(Command):
             conDB.commit()
             conDB.close()
             if bonusAmount > 0:
-                bot.write("{} was gifted {} Psy Points".format(bonusUser, bonusAmount))
+                bot.write("{} was gifted {} {}".format(bonusUser, bonusAmount, CONFIG['currency']['plural']))
             else:
-                bot.write("{} was docked {} Psy Points".format(bonusUser, bonusAmount))
+                bot.write("{} was docked {} {}".format(bonusUser, bonusAmount, CONFIG['currency']['plural']))
         except:
             bot.write("Despite my best efforts that didn't work.")
 
@@ -131,9 +131,9 @@ class Points(Command):
             bot.write("Sorry {} I don't seem to have any points for you or an error has occured.".format(pointUser))
         if userPoints:
             if userPoints > 1:
-                bot.write("User {} has {} Psy Points".format(pointUser, userPoints))
+                bot.write("User {} has {} {}".format(pointUser, userPoints, CONFIG['currency']['plural']))
             else:
-                bot.write("User {} has {} Psy Point".format(pointUser, userPoints))
+                bot.write("User {} has {} {}".format(pointUser, userPoints, CONFIG['currency']['single']))
 
 
 class PointsMe(Command):
@@ -142,12 +142,13 @@ class PointsMe(Command):
     perm = Permission.User
 
     def match(self, bot, user, msg):
-        return msg.lower().startswith("!pointsme")
+        if msg.lower().startswith("!pointsme") and CONFIG['allow_otb']:
+            return True
 
     def run(self, bot, user, msg):
         pointUser = user.lower().strip()
         error = None
-        bonusPoints = 1200
+        bonusPoints = CONFIG['otb_amount']
         conDB = lite.connect('bot.db')
         cur = conDB.cursor()
         cur.execute("SELECT redemption FROM UserPoints WHERE username=:user;", {"user": pointUser})
@@ -161,7 +162,8 @@ class PointsMe(Command):
                             {"inc":bonusPoints,"user":pointUser})
                 cur.execute("UPDATE UserPoints SET redemption = 1 WHERE username=:user;", {"user":pointUser})
                 conDB.commit()
-                bot.write("{} has redeemed a one time Points bonus of {}".format(pointUser, bonusPoints))
+                bot.write("{} has redeemed a one time {} bonus of {}".format(pointUser, CONFIG['currency']['plural'],\
+                                                                             bonusPoints))
             except:
                 bot.write("Sorry {} I screwed up somewhere and I don't know where.".format(pointUser))
         elif userRedeem is not None:
@@ -201,25 +203,23 @@ class PixToChat(Command):
         url = regexcheck.match(msg).group(1)
         conDB = lite.connect('bot.db')
         picUser = user.lower().strip()
-        pointsRedeem = 120
+        pointsRedeem = CONFIG['pix_redeem']
         redeem = False
         cur = conDB.cursor()
         cur.execute("SELECT points FROM UserPoints WHERE username=:user;", {"user": picUser} )
         userPoints = cur.fetchone()[0]
-        #revkey = CONFIG['revlo_key']
-        #client = RevloClient(api_key=revkey)
-        #userPoints = client.get_loyalty(picUser)['loyalty']['current_points']
         if userPoints >= pointsRedeem:
             try:
                 redeem = cur.execute("UPDATE UserPoints SET points = points-:cost WHERE username=:user;",\
                                      {"cost": pointsRedeem, "user": picUser })
                 conDB.commit()
-                #redeem = True
-                #redeem = client.bonus(picUser, -pointsRedeem)
             except:
-                bot.write("I'm sorry {}. I was unable to redeem your points. Please try again.".format(picUser))
+                bot.write("I'm sorry {}. I was unable to redeem your {}. Please try again.".format(picUser,\
+                                                                                                   CONFIG['currency']\
+                                                                                                       ['plural']))
         else:
-            bot.write("Sorry {}, you haven't got the {} points needed to PixtoChat".format(picUser,pointsRedeem))
+            bot.write("Sorry {}, you haven't got the {} {} needed to PixtoChat".format(picUser,pointsRedeem,\
+                                                                                       CONFIG['currency']['plural']))
             redeem = False
         conDB.close()
         if redeem:

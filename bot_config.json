@@ -1,8 +1,12 @@
 {
-        "channel": "",
-        "username": "",
-        "oauth_key": "",
-        "ignore_list": ["nightbot", "moobot", "revlobot"],
-        "revlo_key": "",
-        "owner_list": [""]
+    "channel": "",
+    "username": "",
+    "oauth_key": "",
+    "ignore_list": ["nightbot", "moobot", "revlobot"],
+    "revlo_key": "",
+    "owner_list": [""],
+    "currency": {"single": "Psy Point", "plural": "Psy Points"},
+    "allow_otb": true,
+    "pix_redeem": 120,
+    "otb_amount": 1200
 }

@@ -9,7 +9,7 @@ If you like what you see here, go checkout [SimpleTwitchBot](https://github.com/
 If you want something even more barebone than that, checkout [BareboneTwitchBot](https://github.com/EhsanKia/BareboneTwitchBot).
 
 # Installation and usage
-You will need Python 2.7+ with [Twisted](https://twistedmatrix.com/trac/), [Revlo](https://github.com/teamrevlo/revlo-python-client), [Flask](https://pypi.python.org/pypi/Flask/0.12), and [SocketIO](https://pypi.python.org/pypi/python-socketio) installed.
+You will need Python 2.7+ with [Twisted](https://twistedmatrix.com/trac/), [Flask](https://pypi.python.org/pypi/Flask/0.12), and [SocketIO](https://pypi.python.org/pypi/python-socketio) installed.
 You then copy this project in a folder, configure the bot and run `twitch_irc.py`.
 
 #### Configuration:

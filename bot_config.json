@@ -7,5 +7,17 @@
     "currency": {"single": "Psy Point", "plural": "Psy Points"},
     "allow_otb": true,
     "pix_redeem": 120,
-    "otb_amount": 1200
+    "otb_amount": 1200,
+    "random_hurry": ["hurry up!", "be quick about it!", "get a move on!", "move like lightning!", "make haste!",
+                       "shake a leg!", "step on it!", "put the pedal to the metal!", "get the lead out!", "chop chop!",
+                       "get your wiggle on!", "let's go!", "don't take all day!", "with a hustle please!",
+                       "arriba, arriba, andale, andale!", "you haven't got all day!", "don't be fooling around now!",
+                       "time's a-wasting!", "less Pokey, more PK Rockin!"],
+    "enable_countdown_images": true,
+    "countdown": ["http://darthyoshi.com/twitch_assets/countdown/1.png",
+        "http://darthyoshi.com/twitch_assets/countdown/2.png","http://darthyoshi.com/twitch_assets/countdown/3.png",
+        "http://darthyoshi.com/twitch_assets/countdown/4.png","http://darthyoshi.com/twitch_assets/countdown/5.png",
+        "http://darthyoshi.com/twitch_assets/countdown/6.png","http://darthyoshi.com/twitch_assets/countdown/7.png",
+        "http://darthyoshi.com/twitch_assets/countdown/8.png","http://darthyoshi.com/twitch_assets/countdown/9.png",
+        "http://darthyoshi.com/twitch_assets/countdown/10.png"]
 }

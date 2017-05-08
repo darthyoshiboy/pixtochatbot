@@ -52,7 +52,7 @@
   var lookAtMeIAmACounter = 0;
   var socket = io.connect('ws://localhost:3000');
   socket.on('image', function(info) {
-      if(!info.modded)
+      if(!info.modded && !info.temp)
       {
         document.getElementById("modQueue").innerHTML+=makeMeDiv(info);
       }

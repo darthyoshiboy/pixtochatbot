@@ -68,7 +68,18 @@ class TwitchBot(irc.IRCClient, object):
 
     def sendimgurmsg(self, user, message):
         with SocketIO('localhost', 3000) as socketIO:
-            socketIO.emit('image', { "image": True,"url":message,"user":user, "modded": False })
+            socketIO.emit('image', { "image": True,"url":message,"user":user, "modded": False, "spectime": 0,
+                                     "temp": False })
+
+    def sendmodimgurmsg(self, user, message):
+        with SocketIO('localhost', 3000) as socketIO:
+            socketIO.emit('image', { "image": True,"url":message,"user":user, "modded": True, "spectime": 0,
+                                     "temp": False })
+
+    def sendtmpmsg(self, user, message, sectime):
+        with SocketIO('localhost', 3000) as socketIO:
+            socketIO.emit('image', { "image": True,"url":message,"user":user, "modded": False, "spectime": sectime*1000,
+                                     "temp": True })
 
     def privmsg(self, user, channel, msg):
         # Extract twitch name
@@ -322,7 +333,8 @@ class TwitchBot(irc.IRCClient, object):
             cmds.PixToChat(self),
             cmds.Points(self),
             cmds.PointsMe(self),
-            cmds.Bonus(self)
+            cmds.Bonus(self),
+            cmds.Approve(self)
         ]
 
     def reload(self):

@@ -36,29 +36,9 @@ class Command(object):
     def close(self, bot):
         pass
 
-
-class EnterRaffle(Command):
-    '''Enter a raffle. We re-init on every raffle run,
-    so it's only valid to enter while a raffle is
-    running'''
-
-    perm = Permission.User
-
-    def match(self, bot, user, msg):
-        return msg.lower().startswith("!enter")
-
-    def run(self, bot, user, msg):
-        global runningRaffle
-        global raffleEntrants
-        rafUser = user.lower().strip()
-
-        if rafUser not in raffleEntrants and runningRaffle > 0:
-            raffleEntrants.append(rafUser)
-        elif runningRaffle is 0:
-            bot.write("No Raffle is currently open {}, try again later?".format(rafUser))
-        else:
-            bot.write("{} has already entered.".format(rafUser))
-
+###############################################################################
+## POINTS SYSTEM COMMANDS                                                    ##
+###############################################################################
 
 class Bonus(Command):
     '''Bonus user points'''
@@ -106,6 +86,67 @@ class Bonus(Command):
                 bot.write("{} was gifted {} {}".format(bonusUser, bonusAmount, CONFIG['currency']['plural']))
             else:
                 bot.write("{} was docked {} {}".format(bonusUser, bonusAmount, CONFIG['currency']['plural']))
+        except:
+            bot.write("Despite my best efforts that didn't work.")
+
+
+class Approve(Command):
+    '''Bonus user points'''
+
+    perm = Permission.Moderator
+
+    def match(self, bot, user, msg):
+        args = msg.split()
+        if msg.lower().startswith("!iapprove") and len(args) == 3:
+            appUser = args[1].lower().strip()
+            appBool = args[2]
+            if 'fal' in appBool.lower():
+                appInt = 0
+            elif 'tru' in appBool.lower():
+                appInt = 1
+            else:
+                bot.write("!iapprove Usage: !iapprove username [True/False]")
+                return False
+            try:
+                conDB = lite.connect('bot.db')
+                cur = conDB.cursor()
+                cur.execute("SELECT rowid FROM UserPoints WHERE username=:user;", {"user": appUser})
+                usrCheck = cur.fetchone()
+                conDB.close()
+                if usrCheck is None:
+                    bot.write("{} could not be found in the point tracker.".format(appUser))
+                    return False
+            except:
+                bot.write("Something has gone wrong and I don't know what it was.")
+                return False
+        elif msg.lower().startswith("!iapprove"):
+            bot.write("!iapprove Usage: !iapprove username [True/False]")
+            return False
+        regexcheck = re.compile(r'^-?\d?\d?\d?\d?$')
+        if msg.lower().startswith("!iapprove") and appInt is not None and usrCheck is not None:
+            return True
+        else:
+            return False
+
+    def run(self, bot, user, msg):
+        args = msg.split()
+        appUser = args[1].lower().strip()
+        appBool = args[2]
+        if 'fal' in appBool.lower():
+            appInt = 0
+        elif 'tru' in appBool.lower():
+            appInt = 1
+        try:
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("UPDATE UserPoints SET unmoderated=:inc WHERE username=:user;", \
+                        {"inc": appInt, "user": appUser})
+            conDB.commit()
+            conDB.close()
+            if appInt > 0:
+                bot.write("{} is allowed unrestricted access to send PixToChat messages.".format(appUser))
+            else:
+                bot.write("{} is now restricted and PixToChat messages will require moderation.".format(appUser))
         except:
             bot.write("Despite my best efforts that didn't work.")
 
@@ -208,6 +249,9 @@ class PixToChat(Command):
         cur = conDB.cursor()
         cur.execute("SELECT points FROM UserPoints WHERE username=:user;", {"user": picUser} )
         userPoints = cur.fetchone()[0]
+        cur.execute("SELECT unmoderated FROM UserPoints WHERE username=:user;", {"user": picUser} )
+        if cur.fetchone()[0] > 0:
+            userModded = True
         if userPoints >= pointsRedeem:
             try:
                 redeem = cur.execute("UPDATE UserPoints SET points = points-:cost WHERE username=:user;",\
@@ -222,10 +266,114 @@ class PixToChat(Command):
                                                                                        CONFIG['currency']['plural']))
             redeem = False
         conDB.close()
-        if redeem:
+        if redeem and not userModded:
             bot.sendimgurmsg(user, url)
             bot.write("{} has redeemed a PixtoChat image!".format(picUser))
+        elif redeem and userModded:
+            bot.sendmodimgurmsg(user, url)
+            bot.write("{} has redeemed a PixtoChat image!".format(picUser))
 
+
+###############################################################################
+## RAFFLE SYSTEM COMMANDS                                                    ##
+###############################################################################
+
+class Raffle(Command):
+    '''Start a raffle that will be run in x seconds.'''
+    perm = Permission.Moderator
+
+    def match(self, bot, user, msg):
+        return msg.lower().startswith("!raffle")
+
+    def run(self, bot, user, msg):
+        cmd = msg.lower()
+        if cmd == "!raffle":
+            bot.write("Usage: !raffle 300s")
+            return
+
+        arg = cmd[8:].replace(' ', '')
+        match = re.match("([\d\.]+)([sm]).*", arg)
+        if match and runningRaffle is not 1:
+            d, u = match.groups()
+            t = float(d) * (60 if u == 'm' else 1)
+            thread = RaffleThread(bot, user, t)
+            thread.start()
+        elif runningRaffle > 0:
+            bot.write("Sorry {}, you can't start a raffle when one is already running".format(user))
+        else:
+            bot.write("{}: Invalid argument".format(user))
+
+
+class RaffleThread(Thread):
+    def __init__(self, b, u, t):
+        Thread.__init__(self)
+        self.bot = b
+        self.user = u
+        if int(t) < 10:
+            self.time = int(t) + 10
+        else:
+            self.time = int(t)
+
+    def run(self):
+        global raffleEntrants
+        global runningRaffle
+        cd = 10
+        msg = "{} started a raffle. Type '!enter' (sans apostrophes) to enter the raffle.".format(self.user)
+        randomHurry = CONFIG['random_hurry']
+        random.shuffle(randomHurry)
+        raffleEntrants = []
+        runningRaffle = 1
+        self.bot.write(msg)
+        time.sleep(self.time - cd)
+        while cd:
+            if cd > 1:
+                self.bot.write("{} seconds left, {}".format(cd,randomHurry[cd]))
+                cd -= 1
+                if CONFIG["enable_countdown_images"]:
+                    self.bot.sendtmpmsg(CONFIG["username"],CONFIG["countdown"][cd],1)
+                time.sleep(1)
+            else:
+                self.bot.write("{} second left, you're probably too late at this point but TriHard anyway.".format(cd))
+                cd -= 1
+                if CONFIG["enable_countdown_images"]:
+                    self.bot.sendtmpmsg(CONFIG["username"],CONFIG["countdown"][cd],1)
+                time.sleep(1)
+        if not raffleEntrants:
+            runningRaffle = 0
+            msg = "Nobody entered the raffle. :( Congratulations, you're all losers!"
+        else:
+            runningRaffle = 0
+            msg = "{} is the winner of this raffle. Congratulations!".format(random.choice(raffleEntrants))
+        self.bot.write(msg)
+
+
+class EnterRaffle(Command):
+    '''Enter a raffle. We re-init on every raffle run,
+    so it's only valid to enter while a raffle is
+    running'''
+
+    perm = Permission.User
+
+    def match(self, bot, user, msg):
+        return msg.lower().startswith("!enter")
+
+    def run(self, bot, user, msg):
+        global runningRaffle
+        global raffleEntrants
+        rafUser = user.lower().strip()
+
+        if rafUser not in raffleEntrants and runningRaffle > 0:
+            raffleEntrants.append(rafUser)
+            bot.write("{} has entered the raffle.".format(rafUser))
+        elif runningRaffle is 0:
+            bot.write("No Raffle is currently open {}, try again later?".format(rafUser))
+        else:
+            bot.write("{} has already entered.".format(rafUser))
+
+
+###############################################################################
+## GENERAL SYSTEM COMMANDS                                                   ##
+###############################################################################
 
 class SimpleReply(Command):
     '''Simple meta-command to output a reply given
@@ -280,75 +428,6 @@ class General(Command):
 
         if reply:
             bot.write(reply)
-
-
-class Raffle(Command):
-    '''Start a raffle that will be run in x seconds.'''
-    perm = Permission.Moderator
-
-    def match(self, bot, user, msg):
-        return msg.lower().startswith("!raffle")
-
-    def run(self, bot, user, msg):
-        cmd = msg.lower()
-        if cmd == "!raffle":
-            bot.write("Usage: !raffle 300s")
-            return
-
-        arg = cmd[8:].replace(' ', '')
-        match = re.match("([\d\.]+)([sm]).*", arg)
-        if match and runningRaffle is not 1:
-            d, u = match.groups()
-            t = float(d) * (60 if u == 'm' else 1)
-            thread = RaffleThread(bot, user, t)
-            thread.start()
-        elif runningRaffle > 0:
-            bot.write("Sorry {}, you can't start a raffle when one is already running".format(user))
-        else:
-            bot.write("{}: Invalid argument".format(user))
-
-
-class RaffleThread(Thread):
-    def __init__(self, b, u, t):
-        Thread.__init__(self)
-        self.bot = b
-        self.user = u
-        if int(t) < 10:
-            self.time = int(t) + 10
-        else:
-            self.time = int(t)
-
-    def run(self):
-        global raffleEntrants
-        global runningRaffle
-        cd = 10
-        msg = "{} started a raffle. Type '!enter' (sans apostrophes) to enter the raffle.".format(self.user)
-        randomHurry = ["hurry up!", "be quick about it!", "get a move on!", "move like lightning!", "make haste!",
-                       "shake a leg!", "step on it!", "put the pedal to the metal!", "get the lead out!", "chop chop!",
-                       "get your wiggle on!", "let's go!", "don't take all day!", "with a hustle please!",
-                       "arriba, arriba, andale, andale!", "you haven't got all day!", "don't be fooling around now!",
-                       "time's a-wasting!", "less Pokey, more PK Rockin!"]
-        random.shuffle(randomHurry)
-        raffleEntrants = []
-        runningRaffle = 1
-        self.bot.write(msg)
-        time.sleep(self.time - cd)
-        while cd:
-            if cd > 1:
-                self.bot.write("{} seconds left, {}".format(cd,randomHurry[cd]))
-                cd -= 1
-                time.sleep(1)
-            else:
-                self.bot.write("{} second left, you're probably too late at this point but TriHard anyway.".format(cd))
-                cd -= 1
-                time.sleep(1)
-        if not raffleEntrants:
-            runningRaffle = 0
-            msg = "Nobody entered the raffle. :( Congratulations, you're all losers!"
-        else:
-            runningRaffle = 0
-            msg = "{} is the winner of this raffle. Congratulations!".format(random.choice(raffleEntrants))
-        self.bot.write(msg)
 
 
 class Timer(Command):

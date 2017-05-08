@@ -7,22 +7,40 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <style>
   #dynimg {
-  display: block;
-  image-rendering: pixelated;
-  filter: grayscale(100%) contrast(20) brightness(1.5);
-  max-height: 380px;
-  max-width: 100%;
-  margin: auto;
+      display: block;
+      image-rendering: pixelated;
+      filter: grayscale(100%) contrast(20) brightness(1.5);
+      max-height: 380px;
+      max-width: 100%;
+      padding: 5px;
+      position: absolute;
+      left: 6px;
+      top: 26px;
+      margin: auto;
+      z-index: -1px;
+  }
+  #tmpimg {
+      display: none;
+      image-rendering: pixelated;
+      filter: grayscale(100%) contrast(20) brightness(1.5);
+      max-height: 380px;
+      max-width: 100%;
+      padding: 5px;
+      position: absolute;
+      left: 6px;
+      top: 26px;
+      margin: auto;
+      z-index: 1px;
   }
   #pixtochat {
-    border-radius: 5px;
-    background-image: url(http://darthyoshi.com/twitch_assets/back_lined.png);
-    background-repeat: repeat;
-    margin-bottom: 4px;
-    padding-top: 0px !important;
-    padding-bottom: 4px !important;
-    border:2px solid black;
-    overflow: hidden;
+      border-radius: 5px;
+      background-image: url(http://darthyoshi.com/twitch_assets/back_lined.png);
+      background-repeat: repeat;
+      margin-bottom: 4px;
+      padding-top: 0px !important;
+      padding-bottom: 4px !important;
+      border:2px solid black;
+      overflow: hidden;
   }
 </style>
 </head>
@@ -33,6 +51,7 @@
 <div id="pixtochat" style="width: 540px; height: 400px;">
 <canvas id="drawCanvas" width="540" height="20"></canvas>
 <img id="dynimg" src="">
+<img id="tmpimg" src="">
 </div>
 
 
@@ -50,6 +69,12 @@
         drawingBox.fillStyle = "#eda300";
         drawingBox.strokeText(info.user, 0, 0);
         drawingBox.fillText(info.user, 0, 0);
+    }
+    if(info.temp)
+    {
+        document.getElementById("tmpimg").src = info.url;
+        $("#tmpimg").show(0);
+        $("#tmpimg").delay(info.spectime).hide(0);
     }
   });
 </script>

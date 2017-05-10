@@ -4,6 +4,8 @@
     "oauth_key": "",
     "ignore_list": ["nightbot", "moobot", "revlobot"],
     "owner_list": [""],
+    "mod_login": "",
+    "mod_pass": "",
     "currency": {"single": "Psy Point", "plural": "Psy Points"},
     "allow_otb": true,
     "pix_redeem": 120,

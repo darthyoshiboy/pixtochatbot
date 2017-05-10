@@ -13,6 +13,9 @@ import logging.config
 import requests
 logging.config.fileConfig('logging.conf')
 
+with open('bot_config.json') as fp:
+    CONFIG = json.load(fp)
+
 global sio
 
 global raffleEntrants
@@ -25,14 +28,20 @@ class chatSocket(Thread):
     def run(self):
         from flask import Flask, render_template
         from flask_socketio import SocketIO, emit
+        from flask_basicauth import BasicAuth
 
         app = Flask(__name__)
+        app.config['BASIC_AUTH_USERNAME'] = CONFIG['mod_login']
+        app.config['BASIC_AUTH_PASSWORD'] = CONFIG['mod_pass']
+        basic_auth = BasicAuth(app)
+
         socketio = SocketIO(app)
         @app.route("/")
         def index():
             return render_template('imgloader.html',)
 
         @app.route("/mod")
+        @basic_auth.required
         def mod():
             return render_template('mod.html',)
 

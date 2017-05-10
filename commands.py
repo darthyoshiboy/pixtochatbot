@@ -252,6 +252,8 @@ class PixToChat(Command):
         cur.execute("SELECT unmoderated FROM UserPoints WHERE username=:user;", {"user": picUser} )
         if cur.fetchone()[0] > 0:
             userModded = True
+        else:
+            userModded = False
         if userPoints >= pointsRedeem:
             try:
                 redeem = cur.execute("UPDATE UserPoints SET points = points-:cost WHERE username=:user;",\

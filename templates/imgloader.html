@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Image loader</title>
+  <title>{{ chan }} - Image loader</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <style>
   #dynimg {
@@ -34,7 +34,7 @@
   }
   #pixtochat {
       border-radius: 5px;
-      background-image: url(http://darthyoshi.com/twitch_assets/back_lined.png);
+      background-image: url({{ bkgimg }});
       background-repeat: repeat;
       margin-bottom: 4px;
       padding-top: 0px !important;
@@ -58,7 +58,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.2/socket.io.js"></script>
 <script>
   var drawingBox = document.getElementById('drawCanvas').getContext('2d');
-  var socket = io.connect('ws://localhost:3000');
+  var socket = io.connect('ws://{{ host }}:{{ port }}');
   socket.on('image', function(info) {
     if(info.modded)
     {

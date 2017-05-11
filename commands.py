@@ -230,7 +230,7 @@ class PixToChat(Command):
     perm = Permission.User
 
     def match(self, bot, user, msg):
-        regexcheck = re.compile(r'^\!pix\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
+        regexcheck = re.compile(r'^\!pix\ (http(?:|s)://i.imgur.com/.*(?:.png|.jpg|.gif))$')
         picUser = user.lower().strip()
         if regexcheck.search(msg):
             return True
@@ -240,8 +240,12 @@ class PixToChat(Command):
             return False
 
     def run(self, bot, user, msg):
-        regexcheck = re.compile(r'^\!pix\ (http(?:|s)://i.imgur.com.*(?:.png|.jpg|.gif))$')
+        import urllib
+        regexcheck = re.compile(r'^\!pix\ (http(?:|s)://i.imgur.com/(.*(?:.png|.jpg|.gif)))$')
         url = regexcheck.match(msg).group(1)
+        locurl = "./imgs/" + regexcheck.match(msg).group(2)
+        urllib.urlretrieve(url,locurl)
+        url = CONFIG['protocol'] + "://" + CONFIG['hostname'] + ":" + str(CONFIG['port']) + "/imgs/" + regexcheck.match(msg).group(2)
         conDB = lite.connect('bot.db')
         picUser = user.lower().strip()
         pointsRedeem = CONFIG['pix_redeem']
@@ -347,6 +351,28 @@ class RaffleThread(Thread):
             runningRaffle = 0
             msg = "{} is the winner of this raffle. Congratulations!".format(random.choice(raffleEntrants))
         self.bot.write(msg)
+
+
+class ReRoll(Command):
+    '''ReRoll the last Raffle'''
+
+    perm = Permission.Moderator
+
+    def match(self, bot, user, msg):
+        return msg.lower().startswith("!reroll")
+
+    def run(self, bot, user, msg):
+        global raffleEntrants
+        global runningRaffle
+        msg = "{} is attempting to re-roll the last raffle.".format(user)
+        bot.write(msg)
+        if runningRaffle == 0 and not raffleEntrants:
+            msg = "Nobody entered that raffle. :( Congratulations, you're still all losers!"
+        elif runningRaffle == 0:
+            msg = "{} is the winner of this raffle. Congratulations!".format(random.choice(raffleEntrants))
+        else:
+            msg = "What are you even doing? That's absurd!"
+        bot.write(msg)
 
 
 class EnterRaffle(Command):

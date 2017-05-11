@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Image Moderator</title>
+  <title>{{ chan }} - Image Moderator</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <style>
   img {
@@ -50,7 +50,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.2/socket.io.js"></script>
 <script>
   var lookAtMeIAmACounter = 0;
-  var socket = io.connect('ws://localhost:3000');
+  var socket = io.connect('ws://{{ host }}:{{ port }}');
   socket.on('image', function(info) {
       if(!info.modded && !info.temp)
       {

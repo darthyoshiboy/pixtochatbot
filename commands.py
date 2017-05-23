@@ -1,12 +1,9 @@
 from threading import Thread
-from revlo.client import RevloClient
-import sqlite3 as lite
 import json
 import time
 import random
 import re
 import sqlite3 as lite
-import sys
 
 global raffleEntrants
 global runningRaffle

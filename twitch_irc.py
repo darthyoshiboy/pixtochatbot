@@ -1,10 +1,7 @@
 from twisted.internet import protocol, reactor
 from collections import defaultdict
 
-import sys, json
-import socketio
-#import eventlet
-from flask import Flask, render_template
+import json
 from threading import Thread
 import bot
 import time
@@ -64,7 +61,6 @@ class trackUserPoints(Thread):
 
     def run(self):
         import sqlite3 as lite
-        import sys
         with open('bot_config.json') as fp:
             CONFIG = json.load(fp)
 

@@ -11,9 +11,6 @@ import logging
 import signal
 import json
 import time
-import re
-import sqlite3 as lite
-import sys
 
 
 USERLIST_API = "http://tmi.twitch.tv/group/user/{}/chatters"

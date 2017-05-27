@@ -34,6 +34,96 @@ class Command(object):
         pass
 
 ###############################################################################
+## QUOTES SYSTEM COMMANDS                                                    ##
+###############################################################################
+
+class QuoteAdd(Command):
+    '''Add quotes'''
+
+    perm = Permission.Moderator
+
+    def match(self, bot, user, msg):
+        args = msg.split('"')
+        if msg.lower().startswith("!quote") and len(args) == 3:
+            return True
+        else:
+            return False
+
+    def run(self, bot, user, msg):
+        import time
+        stamp = time.strftime("%Y-%m-%d %H:%M")
+        protofunc,quote,quser = msg.split('"')
+        func = msg.split(' ')[1].lower()
+        if func == "add":
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("INSERT INTO Quotes(quote,quoted,timestamp,addedby) VALUES (?,?,?,?);", [ quote, quser, stamp,\
+                                                                                                  user ])
+            quotenumb = cur.lastrowid
+            conDB.commit()
+            conDB.close()
+            bot.write("{} added quote #{} to the DB: '{}' by {}".format(user, quotenumb, quote, quser))
+
+
+class QuoteDel(Command):
+    '''Delete quotes'''
+
+    perm = Permission.Admin
+
+    def match(self, bot, user, msg):
+        args = msg.split(' ')
+        if msg.lower().startswith("!quote") and len(args) == 3:
+            return True
+        else:
+            return False
+
+    def run(self, bot, user, msg):
+        func = msg.split(' ')[1].lower()
+        numb = msg.split(' ')[2].lower()
+        if func == "del":
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("DELETE FROM Quotes WHERE numb=:numb;", {"numb": numb})
+            quotenumb = cur.lastrowid
+            conDB.commit()
+            conDB.close()
+            bot.write("{} deleted quote #{} from the DB.".format(user, numb))
+
+
+class Quote(Command):
+    '''Retrieve quotes'''
+
+    perm = Permission.User
+
+    def match(self, bot, user, msg):
+        args = msg.split(' ')
+        if msg.lower().startswith("!quote") and len(args) <= 2:
+            return True
+        else:
+            return False
+
+    def run(self, bot, user, msg):
+        args = msg.split(' ')
+        if len(args) == 2:
+            numb = args[1]
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("SELECT * from Quotes WHERE numb=:numb;", {"numb": numb})
+            quote = cur.fetchone()
+            conDB.close()
+        else:
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("SELECT * FROM Quotes ORDER BY RANDOM() LIMIT 1;")
+            quote = cur.fetchone()
+            conDB.close()
+        if quote:
+            bot.write("Quote #{}: '{}' -{} (Added: {}) ".format(quote[0], quote[1], quote[4], quote[3]))
+        else:
+            bot.write("I couldn't find a quote for you {}".format(user))
+
+
+###############################################################################
 ## POINTS SYSTEM COMMANDS                                                    ##
 ###############################################################################
 
@@ -242,7 +332,8 @@ class PixToChat(Command):
         url = regexcheck.match(msg).group(1)
         locurl = "./imgs/" + regexcheck.match(msg).group(2)
         urllib.urlretrieve(url,locurl)
-        url = CONFIG['protocol'] + "://" + CONFIG['hostname'] + ":" + str(CONFIG['port']) + "/imgs/" + regexcheck.match(msg).group(2)
+        url = CONFIG['protocol'] + "://" + CONFIG['hostname'] + ":" + str(CONFIG['port']) + "/imgs/"\
+              + regexcheck.match(msg).group(2)
         conDB = lite.connect('bot.db')
         picUser = user.lower().strip()
         pointsRedeem = CONFIG['pix_redeem']

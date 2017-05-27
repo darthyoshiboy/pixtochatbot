@@ -332,7 +332,10 @@ class TwitchBot(irc.IRCClient, object):
             cmds.PointsMe(self),
             cmds.Bonus(self),
             cmds.Approve(self),
-            cmds.ReRoll(self)
+            cmds.ReRoll(self),
+            cmds.QuoteAdd(self),
+            cmds.QuoteDel(self),
+            cmds.Quote(self)
         ]
 
     def reload(self):

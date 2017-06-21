@@ -335,8 +335,10 @@ class TwitchBot(irc.IRCClient, object):
             cmds.ReRoll(self),
             cmds.QuoteAdd(self),
             cmds.QuoteDel(self),
-            cmds.Quote(self)
+            cmds.Quote(self),
+            cmds.Spam(self)
         ]
+        self.process_command(self.nickname, "init messages")
 
     def reload(self):
         logging.warning("Reloading bot!")

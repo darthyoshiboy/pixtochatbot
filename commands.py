@@ -3,12 +3,15 @@ import json
 import time
 import random
 import re
+import logging
 import sqlite3 as lite
 
 global raffleEntrants
 global runningRaffle
+global runningSpam
 raffleEntrants = []
 runningRaffle = 0
+runningSpam = 0
 
 with open('bot_config.json') as fp:
     CONFIG = json.load(fp)
@@ -32,6 +35,51 @@ class Command(object):
 
     def close(self, bot):
         pass
+
+
+###############################################################################
+## MESSAGE SYSTEM COMMANDS                                                   ##
+###############################################################################
+
+class Spam(Command):
+    '''Start a thread to send messages as defined in the DB'''
+
+    perm = Permission.User
+
+    def match(self, bot, user, msg):
+        global runningSpam
+        if runningSpam is not 1:
+            runningSpam = 1
+            return True
+        else:
+            return False
+
+    def run(self, bot, user, msg):
+        thread = SpamThread(bot, user)
+        thread.daemon = True
+        thread.start()
+
+
+class SpamThread(Thread):
+    def __init__(self, b, u):
+        Thread.__init__(self)
+        self.bot = b
+        self.user = u
+
+    def run(self):
+        import datetime
+        logging.warning("Messages thread initialized.")
+        while True:
+            conDB = lite.connect('bot.db')
+            cur = conDB.cursor()
+            cur.execute("SELECT * FROM Messages WHERE last LIKE '%true%';")
+            spams = cur.fetchall()
+            conDB.close()
+            now = datetime.datetime.now()
+            for spam in spams:
+                if now.minute % spam[1] is 0:
+                    self.bot.write(spam[0])
+            time.sleep(60)
 
 ###############################################################################
 ## QUOTES SYSTEM COMMANDS                                                    ##

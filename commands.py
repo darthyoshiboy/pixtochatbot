@@ -49,7 +49,6 @@ class Spam(Command):
     def match(self, bot, user, msg):
         global runningSpam
         if runningSpam is not 1:
-            runningSpam = 1
             return True
         else:
             return False
@@ -67,9 +66,12 @@ class SpamThread(Thread):
         self.user = u
 
     def run(self):
+        global runningSpam
         import datetime
         logging.warning("Messages thread initialized.")
-        while True:
+        time.sleep(61)
+        runningSpam = 1
+        while runningSpam is 1:
             conDB = lite.connect('bot.db')
             cur = conDB.cursor()
             cur.execute("SELECT * FROM Messages WHERE last LIKE '%true%';")
@@ -132,7 +134,6 @@ class QuoteDel(Command):
             conDB = lite.connect('bot.db')
             cur = conDB.cursor()
             cur.execute("DELETE FROM Quotes WHERE numb=:numb;", {"numb": numb})
-            quotenumb = cur.lastrowid
             conDB.commit()
             conDB.close()
             bot.write("{} deleted quote #{} from the DB.".format(user, numb))
